@@ -9,13 +9,6 @@
 let bodyPose;
 let connections;
 
-// How often to update the matching image (in milliseconds)
-// Lower = more responsive but more CPU usage
-// Higher = less CPU but slower updates
-// Recommended: 250 (4x/sec) to 1000 (1x/sec)
-let MATCH_UPDATE_INTERVAL_MS = 250;
-let lastMatchTime = 0;
-
 // Current displayed image and poses
 let currentImg;
 let currentPoses = [];
@@ -28,102 +21,94 @@ let posesKahn = [];
 let posesMan = [];
 let posesStratton = [];
 
-// Webcam and pose matching variables
-let video;
-let webcamPoses = [];
-let referencePoses = null;
-let bestMatchImg = null;
-let bestMatchName = "";
-
 function preload() {
   // Load the bodyPose model
   bodyPose = ml5.bodyPose();
   kahnImg = loadImage("images/kahn_400x593.png");
   manImg = loadImage("images/man_400x593.png");
   strattonImg = loadImage("images/stratton_400x593.png");
-
-  // Load the pre-computed normalized poses
-  referencePoses = loadJSON("normalized_poses.json");
 }
 
 function setup() {
-  // Double width: webcam on left, matching image on right
-  createCanvas(800, 593);
+  createCanvas(400, 593);
 
   // Get the skeleton connection information
   connections = bodyPose.getSkeleton();
 
-  // Detect poses for all three reference images
+  // Detect poses for all three images
   bodyPose.detect(kahnImg, gotPosesKahn);
   bodyPose.detect(manImg, gotPosesMan);
   bodyPose.detect(strattonImg, gotPosesStratton);
 
   // Set initial display to man image
   currentImg = manImg;
-
-  // Set up webcam
-  video = createCapture(VIDEO);
-  video.size(400, 593);
-  video.hide();
-
-  // Start continuous pose detection on webcam
-  bodyPose.detectStart(video, gotWebcamPoses);
 }
 
 function draw() {
-  // Only update the match at the configured interval (not every frame)
-  let currentTime = millis();
-  if (currentTime - lastMatchTime >= MATCH_UPDATE_INTERVAL_MS) {
-    findBestMatch();
-    lastMatchTime = currentTime;
+  // Draw the current image
+  image(currentImg, 0, 0);
+
+  // Only draw poses if we have them
+  if (currentPoses.length === 0) {
+    return;
   }
 
-  // Draw webcam on the left side
-  if (video) {
-    image(video, 0, 0, 400, 593);
-  }
+  let pose = currentPoses[0];
 
-  // Draw skeleton on webcam feed if poses detected
-  if (webcamPoses.length > 0) {
-    let pose = webcamPoses[0];
-
-    // Draw the skeleton connections
-    for (let j = 0; j < connections.length; j++) {
-      let pointAIndex = connections[j][0];
-      let pointBIndex = connections[j][1];
-      let pointA = pose.keypoints[pointAIndex];
-      let pointB = pose.keypoints[pointBIndex];
-      // Only draw a line if both points are confident enough
-      if (pointA.confidence > 0.1 && pointB.confidence > 0.1) {
-        stroke(255, 0, 0);
-        strokeWeight(2);
-        line(pointA.x, pointA.y, pointB.x, pointB.y);
-      }
-    }
-
-    // Draw all the tracked landmark points
-    for (let j = 0; j < pose.keypoints.length; j++) {
-      let keypoint = pose.keypoints[j];
-      // Only draw a circle if the keypoint's confidence is bigger than 0.1
-      if (keypoint.confidence > 0.1) {
-        fill(0, 255, 0);
-        noStroke();
-        circle(keypoint.x, keypoint.y, 10);
-      }
+  // Draw the skeleton connections
+  for (let j = 0; j < connections.length; j++) {
+    let pointAIndex = connections[j][0];
+    let pointBIndex = connections[j][1];
+    let pointA = pose.keypoints[pointAIndex];
+    let pointB = pose.keypoints[pointBIndex];
+    // Only draw a line if both points are confident enough
+    if (pointA.confidence > 0.1 && pointB.confidence > 0.1) {
+      stroke(255, 0, 0);
+      strokeWeight(2);
+      line(pointA.x, pointA.y, pointB.x, pointB.y);
     }
   }
 
-  // Draw the best matching image on the right side
-  if (bestMatchImg) {
-    image(bestMatchImg, 400, 0, 400, 593);
+  // Draw all the tracked landmark points
+  for (let j = 0; j < pose.keypoints.length; j++) {
+    let keypoint = pose.keypoints[j];
+    // Only draw a circle if the keypoint's confidence is bigger than 0.1
+    if (keypoint.confidence > 0.1) {
+      fill(0, 255, 0);
+      noStroke();
+      circle(keypoint.x, keypoint.y, 10);
+    }
   }
 
-  // Draw label for the matching image
-  fill(255);
+  // Compute bounding box from keypoints (so it contains all points)
+  let xMin = Infinity;
+  let xMax = -Infinity;
+  let yMin = Infinity;
+  let yMax = -Infinity;
+
+  for (let j = 0; j < pose.keypoints.length; j++) {
+    let keypoint = pose.keypoints[j];
+    if (keypoint.confidence > 0.1) {
+      xMin = min(xMin, keypoint.x);
+      xMax = max(xMax, keypoint.x);
+      yMin = min(yMin, keypoint.y);
+      yMax = max(yMax, keypoint.y);
+    }
+  }
+
+  // Draw the bounding box
+  stroke(0, 0, 255);
+  strokeWeight(2);
+  noFill();
+  rect(xMin, yMin, xMax - xMin, yMax - yMin);
+
+  // Draw corner points
+  fill(0, 0, 255);
   noStroke();
-  textSize(24);
-  textAlign(CENTER);
-  text(bestMatchName, 600, 30);
+  circle(xMin, yMin, 10);
+  circle(xMax, yMin, 10);
+  circle(xMin, yMax, 10);
+  circle(xMax, yMax, 10);
 }
 
 // Callback functions for when bodyPose outputs data
@@ -141,61 +126,6 @@ function gotPosesMan(results) {
 
 function gotPosesStratton(results) {
   posesStratton = results;
-}
-
-// Callback for continuous webcam pose detection
-function gotWebcamPoses(results) {
-  webcamPoses = results;
-}
-
-// Find the reference pose that best matches the webcam pose
-function findBestMatch() {
-  // Need webcam pose and reference poses to compare
-  if (webcamPoses.length === 0 || referencePoses === null) {
-    return;
-  }
-
-  // Process the webcam pose
-  let webcamProcessed = processPose(webcamPoses[0]);
-  if (webcamProcessed === null) {
-    return;
-  }
-
-  let bestSimilarity = -Infinity;
-  let bestName = "";
-  let bestImg = null;
-
-  // Compare against each reference pose
-  if (referencePoses.kahn && referencePoses.kahn.l2Vector) {
-    let similarity = cosineSimilarity(webcamProcessed.l2Vector, referencePoses.kahn.l2Vector);
-    if (similarity > bestSimilarity) {
-      bestSimilarity = similarity;
-      bestName = "kahn";
-      bestImg = kahnImg;
-    }
-  }
-
-  if (referencePoses.man && referencePoses.man.l2Vector) {
-    let similarity = cosineSimilarity(webcamProcessed.l2Vector, referencePoses.man.l2Vector);
-    if (similarity > bestSimilarity) {
-      bestSimilarity = similarity;
-      bestName = "man";
-      bestImg = manImg;
-    }
-  }
-
-  if (referencePoses.stratton && referencePoses.stratton.l2Vector) {
-    let similarity = cosineSimilarity(webcamProcessed.l2Vector, referencePoses.stratton.l2Vector);
-    if (similarity > bestSimilarity) {
-      bestSimilarity = similarity;
-      bestName = "stratton";
-      bestImg = strattonImg;
-    }
-  }
-
-  // Update the best match
-  bestMatchImg = bestImg;
-  bestMatchName = bestName;
 }
 
 // Compute bounding box from keypoints with confidence threshold
@@ -289,22 +219,6 @@ function processPose(pose) {
     normalizedKeypoints: normalizedKeypoints,
     l2Vector: l2Vector
   };
-}
-
-// Compute cosine similarity between two L2-normalized vectors
-// Returns a value from -1 to 1 (1 = identical, 0 = unrelated)
-function cosineSimilarity(vectorA, vectorB) {
-  if (vectorA.length !== vectorB.length) {
-    console.error("Vectors must have the same length");
-    return 0;
-  }
-
-  let dotProduct = 0;
-  for (let i = 0; i < vectorA.length; i++) {
-    dotProduct += vectorA[i] * vectorB[i];
-  }
-
-  return dotProduct;
 }
 
 // Save all normalized pose data to a JSON file
