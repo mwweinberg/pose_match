@@ -4,11 +4,34 @@ Inspired? by https://medium.com/tensorflow/move-mirror-an-ai-experiment-with-pos
 https://docs.ml5js.org/#/reference/bodypose
 
 
-/archive are old versions that might be helful for troubleshooting/figuring out how you got here
+## /archive are old versions that might be helful for troubleshooting/figuring out how you got here
+
+## /utilities contains utilities to prep the dataset (images and metadata)
+### image_cleaner is the utility to take a bunch of arbitrary images, determine if they contain people, and save metadata including pose information
+It assumes:
+* Images in a folder called `original_met_images`
+* that the filenames for those images is `objectID.jpg`
+* that there is metadata in a file called `cleaned_met_data.json` that includes the fields:
+** "Object_ID"
+** "title"
+** "artist"
+** "date"
+** "department"
+** "medium"
+** "link"
+** "repository"
+
+It outputs:
+* Images that probably have people in `/person_images`
+* metadata for those images into `person_images_metadata.json`
 
 ## Development Plan
 
-### Phase 3 (easy for others to add their own images and branding)
+### Phase 4 (easy for others to add their own images and branding)
+
+### Phase 3 (online testing)
+
+1. Host somewhere that makes the site available to others
 
 ### Phase 2 (working at scale)
 
@@ -18,6 +41,7 @@ https://docs.ml5js.org/#/reference/bodypose
 4. Improve UX to display information from metadata with the image
 5. Create a standard image page to provide key details about arbitrary images based on a unique identifier
 6. Add branding and styling to primary page
+7. Handle external webcams (choose webcam in browser?)
 
 
 
