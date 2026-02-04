@@ -12,14 +12,14 @@ It assumes:
 * Images in a folder called `original_met_images`
 * that the filenames for those images is `objectID.jpg`
 * that there is metadata in a file called `cleaned_met_data.json` that includes the fields:
-** "Object_ID"
-** "title"
-** "artist"
-** "date"
-** "department"
-** "medium"
-** "link"
-** "repository"
+    * "Object_ID"
+    * "title"
+    * "artist"
+    * "date"
+    * "department"
+    * "medium"
+    * "link"
+    * "repository"
 
 It outputs:
 * Images that probably have people in `/person_images`
