@@ -4,9 +4,25 @@ Inspired? by https://medium.com/tensorflow/move-mirror-an-ai-experiment-with-pos
 https://docs.ml5js.org/#/reference/bodypose
 
 
-use movenet so that the same model is used for the DB and the live project
+/archive are old versions that might be helful for troubleshooting/figuring out how you got here
 
 ## Development Plan
+
+### Phase 3 (easy for others to add their own images and branding)
+
+### Phase 2 (working at scale)
+
+1. Analyze a folder with images and metadata.  Copy images with detectable human poses into a /library folder and create json or other document with associated metadata
+2. Determine how to store images and metadata so they can be quickly matched and displayed
+3. Implement high-speed matching to display matches in near real time
+4. Improve UX to display information from metadata with the image
+5. Create a standard image page to provide key details about arbitrary images based on a unique identifier
+6. Add branding and styling to primary page
+
+
+
+
+### Phase 1 (working prototype)
 
 1. create page that successfully identifies point detection for 3 images and accurately draws bounding boxes around them. Page allows user to toggle through the images with keypoints and bounding box displayed to confirm that the keypoints and bounding box are correct
 2. for each image, a) resize and scale around a consistent square size, b) use L2 normalization for all of the keypoints, c) save the cosine similarity score for the normalized keypoints in an external file that can be referenced later

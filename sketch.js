@@ -1,10 +1,4 @@
-/*
- * 👋 Hello! This is an ml5.js example made and shared with ❤️.
- * Learn more about the ml5.js project: https://ml5js.org/
- * ml5.js license and Code of Conduct: https://github.com/ml5js/ml5-next-gen/blob/main/LICENSE.md
- *
- * This example demonstrates drawing skeletons on poses for the MoveNet model.
- */
+
 
 let bodyPose;
 let connections;
@@ -16,34 +10,24 @@ let connections;
 let MATCH_UPDATE_INTERVAL_MS = 250;
 let lastMatchTime = 0;
 
-// Current displayed image and poses
-let currentImg;
-let currentPoses = [];
+// Reference pose data loaded from JSON (array of objects with l2_vector and metadata)
+let referencePoseData = null;
 
-// All images and their detected poses
-let kahnImg;
-let manImg;
-let strattonImg;
-let posesKahn = [];
-let posesMan = [];
-let posesStratton = [];
+// Cache for loaded images (keyed by filename)
+let imageCache = {};
 
 // Webcam and pose matching variables
 let video;
 let webcamPoses = [];
-let referencePoses = null;
 let bestMatchImg = null;
-let bestMatchName = "";
+let bestMatchData = null;  // Full metadata for the current best match
 
 function preload() {
   // Load the bodyPose model
   bodyPose = ml5.bodyPose();
-  kahnImg = loadImage("images/kahn_400x593.png");
-  manImg = loadImage("images/man_400x593.png");
-  strattonImg = loadImage("images/stratton_400x593.png");
 
-  // Load the pre-computed normalized poses
-  referencePoses = loadJSON("normalized_poses.json");
+  // Load the pre-computed pose data for all reference images
+  referencePoseData = loadJSON("person_images_metadata.json");
 }
 
 function setup() {
@@ -52,14 +36,6 @@ function setup() {
 
   // Get the skeleton connection information
   connections = bodyPose.getSkeleton();
-
-  // Detect poses for all three reference images
-  bodyPose.detect(kahnImg, gotPosesKahn);
-  bodyPose.detect(manImg, gotPosesMan);
-  bodyPose.detect(strattonImg, gotPosesStratton);
-
-  // Set initial display to man image
-  currentImg = manImg;
 
   // Set up webcam
   video = createCapture(VIDEO);
@@ -118,29 +94,17 @@ function draw() {
     image(bestMatchImg, 400, 0, 400, 593);
   }
 
-  // Draw label for the matching image
-  fill(255);
-  noStroke();
-  textSize(24);
-  textAlign(CENTER);
-  text(bestMatchName, 600, 30);
-}
+  // Draw label for the matching image (show title from metadata)
+  if (bestMatchData) {
+    fill(255);
+    noStroke();
+    textSize(14);
+    textAlign(CENTER, TOP);
 
-// Callback functions for when bodyPose outputs data
-function gotPosesKahn(results) {
-  posesKahn = results;
-}
-
-function gotPosesMan(results) {
-  posesMan = results;
-  // Set as current poses on initial load (since manImg is the default)
-  if (currentPoses.length === 0) {
-    currentPoses = posesMan;
+    // Display title with text wrapping (width=380, height=50)
+    let title = bestMatchData.metadata.title;
+    text(title, 410, 10, 380, 50);
   }
-}
-
-function gotPosesStratton(results) {
-  posesStratton = results;
 }
 
 // Callback for continuous webcam pose detection
@@ -151,7 +115,7 @@ function gotWebcamPoses(results) {
 // Find the reference pose that best matches the webcam pose
 function findBestMatch() {
   // Need webcam pose and reference poses to compare
-  if (webcamPoses.length === 0 || referencePoses === null) {
+  if (webcamPoses.length === 0 || referencePoseData === null) {
     return;
   }
 
@@ -162,40 +126,48 @@ function findBestMatch() {
   }
 
   let bestSimilarity = -Infinity;
-  let bestName = "";
-  let bestImg = null;
+  let bestData = null;
 
-  // Compare against each reference pose
-  if (referencePoses.kahn && referencePoses.kahn.l2Vector) {
-    let similarity = cosineSimilarity(webcamProcessed.l2Vector, referencePoses.kahn.l2Vector);
+  // Convert to array if needed (p5.js loadJSON returns object with numeric keys for arrays)
+  let poseArray = Array.isArray(referencePoseData) ? referencePoseData : Object.values(referencePoseData);
+
+  // Loop through all reference poses and find the best match
+  for (let i = 0; i < poseArray.length; i++) {
+    let reference = poseArray[i];
+
+    // Skip if no l2_vector
+    if (!reference.l2_vector) {
+      continue;
+    }
+
+    let similarity = cosineSimilarity(webcamProcessed.l2Vector, reference.l2_vector);
+
     if (similarity > bestSimilarity) {
       bestSimilarity = similarity;
-      bestName = "kahn";
-      bestImg = kahnImg;
+      bestData = reference;
     }
   }
 
-  if (referencePoses.man && referencePoses.man.l2Vector) {
-    let similarity = cosineSimilarity(webcamProcessed.l2Vector, referencePoses.man.l2Vector);
-    if (similarity > bestSimilarity) {
-      bestSimilarity = similarity;
-      bestName = "man";
-      bestImg = manImg;
+  // If we found a match, update the display
+  if (bestData !== null) {
+    bestMatchData = bestData;
+
+    // Check if image is already cached
+    let filename = bestData.filename;
+    if (imageCache[filename]) {
+      // Use cached image
+      bestMatchImg = imageCache[filename];
+    } else {
+      // Load the image and cache it
+      loadImage("person_images/" + filename, function(img) {
+        imageCache[filename] = img;
+        // Only update bestMatchImg if this is still the best match
+        if (bestMatchData && bestMatchData.filename === filename) {
+          bestMatchImg = img;
+        }
+      });
     }
   }
-
-  if (referencePoses.stratton && referencePoses.stratton.l2Vector) {
-    let similarity = cosineSimilarity(webcamProcessed.l2Vector, referencePoses.stratton.l2Vector);
-    if (similarity > bestSimilarity) {
-      bestSimilarity = similarity;
-      bestName = "stratton";
-      bestImg = strattonImg;
-    }
-  }
-
-  // Update the best match
-  bestMatchImg = bestImg;
-  bestMatchName = bestName;
 }
 
 // Compute bounding box from keypoints with confidence threshold
@@ -307,49 +279,9 @@ function cosineSimilarity(vectorA, vectorB) {
   return dotProduct;
 }
 
-// Save all normalized pose data to a JSON file
-function saveNormalizedPoses() {
-  let data = {
-    kahn: null,
-    man: null,
-    stratton: null
-  };
-
-  // Process each pose if it was detected
-  if (posesKahn.length > 0) {
-    data.kahn = processPose(posesKahn[0]);
-  }
-  if (posesMan.length > 0) {
-    data.man = processPose(posesMan[0]);
-  }
-  if (posesStratton.length > 0) {
-    data.stratton = processPose(posesStratton[0]);
-  }
-
-  saveJSON(data, 'normalized_poses.json');
-  console.log("Saved normalized poses to normalized_poses.json");
-}
-
+// Debug: log current match data when clicking
 function mousePressed() {
-  console.log("Kahn poses:", posesKahn);
-  console.log("Man poses:", posesMan);
-  console.log("Stratton poses:", posesStratton);
-}
-
-function keyPressed() {
-  if (key === '1') {
-    currentImg = kahnImg;
-    currentPoses = posesKahn;
-  }
-  if (key === '2') {
-    currentImg = manImg;
-    currentPoses = posesMan;
-  }
-  if (key === '3') {
-    currentImg = strattonImg;
-    currentPoses = posesStratton;
-  }
-  if (key === 's') {
-    saveNormalizedPoses();
+  if (bestMatchData) {
+    console.log("Current match:", bestMatchData);
   }
 }
