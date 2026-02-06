@@ -4,10 +4,19 @@ Inspired? by https://medium.com/tensorflow/move-mirror-an-ai-experiment-with-pos
 https://docs.ml5js.org/#/reference/bodypose
 
 
-## /archive are old versions that might be helful for troubleshooting/figuring out how you got here
+## /archive are old versions that might be helpful for troubleshooting/figuring out how you got here
+
+## Pages and Scripts
+
+*index.html and sketch.js* are the main parts of the page
+*info.html* is a template page for individual images. It expects to load with info.html?id=[object_id]
+*about.html* is an about page
+*analytics.js* allows you to add analytics. These are not required. 
 
 ## /utilities contains utilities to prep the dataset (images and metadata)
-### image_cleaner is the utility to take a bunch of arbitrary images, determine if they contain people, and save metadata including pose information
+
+### image_cleaner 
+is the utility to take a bunch of arbitrary images, determine if they contain people, and save metadata including pose information
 It assumes:
 * Images in a folder called `original_met_images`
 * that the filenames for those images is `objectID.jpg`
@@ -25,6 +34,28 @@ It outputs:
 * Images that probably have people in `/person_images`
 * metadata for those images into `person_images_metadata.json`
 
+### met_random_downloader 
+downloads a random collection of images of people from the met and bundles them with the relevant metadata. This is just a script to build the original testing dataset.
+
+*Run met_random_downloader.py* (from the met_random_downloader/ folder)
+
+Outputs: output_images/*.jpg and cleaned_met_data.json
+
+*Move files to image_cleaner/:*
+
+* output_images/*.jpg → image_cleaner/input_images/
+* cleaned_met_data.json → image_cleaner/input_metadata.json **(RENAME)**
+
+Run person_or_not.py (from the image_cleaner/ folder)
+
+Outputs: processed_images/*.jpg and image_metadata.json
+
+*Move files to main project root (DON'T FORGET TO RENAME THE METADATA FILE):*
+
+* processed_images/*.jpg → pose_match/input_images/
+* image_metadata.json → pose_match/input_images_metadata.json **(RENAME)**
+Open index.html and it should work
+
 ## Development Plan
 
 ### Phase 4 (easy for others to add their own images and branding)
@@ -40,8 +71,10 @@ It outputs:
 3. Implement high-speed matching to display matches in near real time
 4. Improve UX to display information from metadata with the image
 5. Create a standard image page to provide key details about arbitrary images based on a unique identifier
-6. Add branding and styling to primary page
-7. Handle external webcams (choose webcam in browser?)
+6. Add accessibility features (maybe add alt text during the person_or_not phase, and slow down refresh rate to make it easier to process alt text display?  this would also be an opportunity to add the "about" menu)
+7. Add branding and styling to primary page
+8. Handle external webcams (choose webcam in browser?)
+9. Analytics
 
 
 

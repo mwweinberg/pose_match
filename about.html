@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About | Pose Match</title>
+    <script src="analytics.js"></script>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+
+      .container {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+      h1 {
+        margin-top: 0;
+        color: #333;
+      }
+
+      p {
+        color: #666;
+        line-height: 1.6;
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-bottom: 20px;
+        color: #666;
+        text-decoration: none;
+      }
+
+      .back-link:hover {
+        color: #333;
+      }
+    </style>
+  </head>
+
+  <body>
+    <a href="index.html" class="back-link">&larr; Back to Pose Match</a>
+
+    <div class="container">
+      <h1>About Pose Match</h1>
+
+      <p>
+        Pose Match is an interactive experience that matches your body pose to artworks
+        from museum collections. Strike a pose in front of your webcam and discover
+        artworks that share your stance.
+      </p>
+
+      <p>
+        This project uses machine learning (MoveNet) to detect body poses in real-time
+        and compares them against a database of pre-analyzed artwork images.
+      </p>
+
+      <h2>How it works</h2>
+      <p>
+        1. Stand in front of your webcam<br>
+        2. The system detects your pose<br>
+        3. Your pose is matched to artworks with similar poses<br>
+        4. Scan the QR code or click the image to learn more about the artwork
+      </p>
+
+      <h2>Credits</h2>
+      <p>
+        Artwork images courtesy of The Metropolitan Museum of Art Open Access collection.
+      </p>
+
+      <p>
+        Built with ml5.js, p5.js, and TensorFlow.
+      </p>
+    </div>
+  </body>
+</html>

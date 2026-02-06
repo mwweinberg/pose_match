@@ -3,8 +3,8 @@ Batch process images to identify those with detectable human poses.
 Uses TensorFlow MoveNet (same model as ml5.js) for consistency.
 
 Outputs:
-- /person_images/ folder with filtered images
-- person_images_metadata.json with metadata + L2 vectors for matching
+- /processed_images/ folder with filtered images
+- image_metadata.json with metadata + L2 vectors for matching
 """
 
 import os
@@ -18,10 +18,10 @@ from PIL import Image
 # ============== CONFIGURATION ==============
 
 # Paths
-INPUT_IMAGES_FOLDER = "original_met_images"
-OUTPUT_IMAGES_FOLDER = "person_images"
-INPUT_METADATA_FILE = "cleaned_met_data.json"
-OUTPUT_METADATA_FILE = "person_images_metadata.json"
+INPUT_IMAGES_FOLDER = "input_images"
+OUTPUT_IMAGES_FOLDER = "processed_images"
+INPUT_METADATA_FILE = "input_metadata.json"
+OUTPUT_METADATA_FILE = "image_metadata.json"
 
 # Pose detection thresholds
 # Minimum average confidence across all keypoints to consider a pose "detected"

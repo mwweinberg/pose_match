@@ -22,28 +22,67 @@ let webcamPoses = [];
 let bestMatchImg = null;
 let bestMatchData = null;  // Full metadata for the current best match
 
+// QR code variables
+let qrCode = null;
+let currentQRObjectId = null;  // Track what QR is currently showing
+
+// Accessibility: debounce timer for screen reader announcements
+let announceTimeout = null;
+const ANNOUNCE_DELAY_MS = 1500;  // Wait 1.5 seconds of stable match before announcing
+
+// Camera status
+let cameraReady = false;
+let cameraError = false;
+
 function preload() {
   // Load the bodyPose model
   bodyPose = ml5.bodyPose();
 
   // Load the pre-computed pose data for all reference images
-  referencePoseData = loadJSON("person_images_metadata.json");
+  referencePoseData = loadJSON("input_image_metadata.json");
 }
 
 function setup() {
   // Double width: webcam on left, matching image on right
-  createCanvas(800, 593);
+  let canvas = createCanvas(800, 593);
+  canvas.parent('canvas-container');
+
+  // Accessibility: add aria-label to canvas
+  canvas.elt.setAttribute('aria-label', 'Pose matching experience: your webcam feed on the left detects your pose, matched artwork appears on the right. Click the artwork or scan the QR code to learn more.');
 
   // Get the skeleton connection information
   connections = bodyPose.getSkeleton();
 
-  // Set up webcam
-  video = createCapture(VIDEO);
+  // Set up webcam with error handling
+  video = createCapture(VIDEO, function() {
+    // Camera access granted
+    cameraReady = true;
+    // Start continuous pose detection on webcam
+    bodyPose.detectStart(video, gotWebcamPoses);
+  });
   video.size(400, 593);
   video.hide();
 
-  // Start continuous pose detection on webcam
-  bodyPose.detectStart(video, gotWebcamPoses);
+  // Handle camera permission denied
+  video.elt.addEventListener('error', function() {
+    cameraError = true;
+  });
+
+  // Also check via getUserMedia for permission denied
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .catch(function(err) {
+      cameraError = true;
+      console.log('Camera access denied:', err.name);
+    });
+
+  // Initialize QR code (empty initially)
+  qrCode = new QRCode(document.getElementById("qrcode"), {
+    width: 80,
+    height: 80,
+    colorDark: "#000000",
+    colorLight: "#ffffff"
+  });
+
 }
 
 function draw() {
@@ -54,8 +93,20 @@ function draw() {
     lastMatchTime = currentTime;
   }
 
-  // Draw webcam on the left side
-  if (video) {
+  // Draw webcam on the left side (or error message if camera denied)
+  if (cameraError) {
+    // Show error message
+    fill(40);
+    noStroke();
+    rect(0, 0, 400, 593);
+    fill(255);
+    textAlign(CENTER, CENTER);
+    textSize(18);
+    text("Camera access denied", 200, 270);
+    textSize(14);
+    fill(180);
+    text("Please allow camera access\nto use Pose Match", 200, 320);
+  } else if (video) {
     image(video, 0, 0, 400, 593);
   }
 
@@ -94,16 +145,22 @@ function draw() {
     image(bestMatchImg, 400, 0, 400, 593);
   }
 
-  // Draw label for the matching image (show title from metadata)
+  // Draw label for the matching image (show title and artist from metadata)
   if (bestMatchData) {
     fill(255);
     noStroke();
-    textSize(14);
     textAlign(CENTER, TOP);
 
-    // Display title with text wrapping (width=380, height=50)
-    let title = bestMatchData.metadata.title;
-    text(title, 410, 10, 380, 50);
+    // Display title
+    textSize(14);
+    let title = bestMatchData.metadata.title || '';
+    text(title, 410, 10, 380, 40);
+
+    // Display artist (smaller, below title)
+    textSize(12);
+    fill(200);  // Slightly dimmer
+    let artist = bestMatchData.metadata.artist || '';
+    text(artist, 410, 55, 380, 30);
   }
 }
 
@@ -152,6 +209,9 @@ function findBestMatch() {
   if (bestData !== null) {
     bestMatchData = bestData;
 
+    // Update QR code if match changed
+    updateQRCode(bestData.object_id);
+
     // Check if image is already cached
     let filename = bestData.filename;
     if (imageCache[filename]) {
@@ -159,7 +219,7 @@ function findBestMatch() {
       bestMatchImg = imageCache[filename];
     } else {
       // Load the image and cache it
-      loadImage("person_images/" + filename, function(img) {
+      loadImage("input_images/" + filename, function(img) {
         imageCache[filename] = img;
         // Only update bestMatchImg if this is still the best match
         if (bestMatchData && bestMatchData.filename === filename) {
@@ -279,9 +339,48 @@ function cosineSimilarity(vectorA, vectorB) {
   return dotProduct;
 }
 
-// Debug: log current match data when clicking
+// Update the QR code when the match changes
+function updateQRCode(objectId) {
+  if (qrCode && objectId !== currentQRObjectId) {
+    currentQRObjectId = objectId;
+    // Build the URL for the info page
+    let infoUrl = window.location.href.replace(/[^/]*$/, '') + 'info.html?id=' + objectId;
+    qrCode.clear();
+    qrCode.makeCode(infoUrl);
+
+    // Debounced screen reader announcement - only announce after match is stable for a period of time (avoids a barrage of announcements)
+    if (announceTimeout) {
+      clearTimeout(announceTimeout);
+    }
+    announceTimeout = setTimeout(announceMatch, ANNOUNCE_DELAY_MS);
+  }
+}
+
+// Announce the current match to screen readers
+function announceMatch() {
+  let announcement = document.getElementById('match-announcement');
+  if (announcement && bestMatchData) {
+    let title = bestMatchData.metadata.title || 'Untitled';
+    let artist = bestMatchData.metadata.artist || 'Unknown artist';
+    announcement.textContent = 'Matched artwork: ' + title + ' by ' + artist;
+  }
+}
+
+// Click on matched image to open info page
 function mousePressed() {
-  if (bestMatchData) {
-    console.log("Current match:", bestMatchData);
+  // Only respond to left-clicks (allow right-click context menu)
+  if (mouseButton !== LEFT) {
+    return;
+  }
+
+  // Exclude the About button area (top-right corner)
+  let inAboutButton = (mouseX > 700 && mouseY < 50);
+
+  // Only respond to clicks on the right side (matched image area), excluding About button
+  if (mouseX > 400 && mouseX < 800 && mouseY > 0 && mouseY < 593 && !inAboutButton) {
+    if (bestMatchData) {
+      let infoUrl = window.location.href.replace(/[^/]*$/, '') + 'info.html?id=' + bestMatchData.object_id;
+      window.open(infoUrl, '_blank');
+    }
   }
 }
