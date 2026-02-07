@@ -35,7 +35,7 @@ It outputs:
 * metadata for those images into `person_images_metadata.json`
 
 ### met_random_downloader 
-downloads a random collection of images of people from the met and bundles them with the relevant metadata. This is just a script to build the original testing dataset.
+downloads a random collection of images of people from the met and bundles them with the relevant metadata. This is just a script to build the original testing dataset.  Run it with `caffeinate -i python met_random_downloader.py` to avoid crashes because the compute goes to sleep in the middle
 
 *Run met_random_downloader.py* (from the met_random_downloader/ folder)
 
@@ -62,6 +62,7 @@ Open index.html and it should work
 
 ### Phase 3 (online testing)
 
+0. Add a glam-e lab/EC footer
 1. Host somewhere that makes the site available to others
 
 ### Phase 2 (working at scale)
@@ -72,9 +73,14 @@ Open index.html and it should work
 4. Improve UX to display information from metadata with the image
 5. Create a standard image page to provide key details about arbitrary images based on a unique identifier
 6. Add accessibility features (maybe add alt text during the person_or_not phase, and slow down refresh rate to make it easier to process alt text display?  this would also be an opportunity to add the "about" menu)
-7. Add branding and styling to primary page
-8. Handle external webcams (choose webcam in browser?)
-9. Analytics
+7. Analytics
+8. Confirm that browser can choose webcam
+X - start here
+9. Create script that either a) copies images and metadata from image_cleaner to the main folder, replacing existing images and metadata in the main folder, or b) copies the images and metadata from image_cleaner, appending them to the existing images and metadata in the main folder. For b, you probably want an option to add some sort of prefix to the object_ID and image file name (like 2 characters) to avoid namespace collisions
+10. Create a new utility to download images from smithsonian
+11. Use 9b to integrate smithsonian images into dataset
+12. Add branding and styling to primary page in a way that can easily be restyled (maybe handed with a separate file, similarly to how analytics.js makes it easy to edit analytics)
+
 
 
 

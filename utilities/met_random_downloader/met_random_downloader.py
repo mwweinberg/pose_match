@@ -9,7 +9,7 @@ import json
 import tensorflow as tf
 import tensorflow_hub as hub
 
-number_of_pictures_to_process = 20
+number_of_pictures_to_process = 500
 number_of_pictures_processed = 0
 
 #so you know how long it takes to run this thing
@@ -186,8 +186,13 @@ while number_of_pictures_processed <= number_of_pictures_to_process:
             print(f'Downloading image from {object_image_url}')
 
             #download the file
-            r = requests.get(object_image_url, timeout=15)
-            r.raise_for_status()
+            try:
+                r = requests.get(object_image_url, timeout=15)
+                r.raise_for_status()
+            except requests.exceptions.HTTPError as e:
+                print(f'Skipping {this_object_ID}: {e}')
+                used_random_numbers.append(this_object_ID)
+                continue
 
             #save it as temp_image.jpg (note, things will be bad if you use this somewhere else that does not use jpg...)
             with open("temp_image.jpg", "wb") as f:
