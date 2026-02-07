@@ -232,7 +232,7 @@ while number_of_pictures_processed <= number_of_pictures_to_process:
                 number_of_pictures_processed += 1
 
             else:
-                print('not a person!')
+                print(f'not a person! still only {number_of_pictures_processed} of {number_of_pictures_to_process} saved.')
 
 
 
