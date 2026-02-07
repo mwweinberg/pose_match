@@ -208,7 +208,8 @@ while number_of_pictures_processed <= number_of_pictures_to_process:
             # Check if valid pose
             if is_valid_pose(keypoints):
                 print('person!')
-                print(f'{number_of_pictures_processed} of {number_of_pictures_to_process} saved.')
+                #number_of_pictures_processed hasn't been incremented yet, so adding +1 to it makes it accurate
+                print(f'{number_of_pictures_processed+1} of {number_of_pictures_to_process} saved.')
 
                 #move & rename the file
                 shutil.move("temp_image.jpg", "output_images/"+str(object_ID)+".jpg")
