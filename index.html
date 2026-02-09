@@ -9,14 +9,54 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>ml5.js bodyPose Skeleton Example</title>
+    <title>Pose Match</title>
+    <script src="branding.js"></script>
     <script src="analytics.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.2/p5.min.js"></script>
     <script src="https://unpkg.com/ml5@1/dist/ml5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
-      body { margin: 0; padding: 0; }
-      #canvas-container { position: relative; display: inline-block; }
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: var(--brand-text-dark, #002235);
+        font-family: var(--brand-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #page-header {
+        text-align: center;
+        padding: 24px 20px 16px;
+      }
+      #page-header .brand-logo {
+        display: none;
+        max-height: 40px;
+        margin-bottom: 12px;
+        padding: 6px 12px;
+        border-radius: var(--brand-card-radius, 4px);
+        background-color: transparent;
+      }
+      #page-header h1 {
+        margin: 0 0 4px;
+        color: #ffffff;
+        font-size: 22px;
+        font-weight: 700;
+      }
+      #page-header p {
+        margin: 0;
+        color: var(--brand-accent, #00f47b);
+        font-size: 14px;
+        font-weight: 300;
+      }
+      #canvas-container {
+        position: relative;
+        display: inline-block;
+        border-radius: var(--brand-card-radius, 8px);
+        overflow: hidden;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+      }
       #qrcode {
         position: absolute;
         bottom: 10px;
@@ -29,16 +69,29 @@
         position: absolute;
         top: 10px;
         right: 10px;
-        background: rgba(255, 255, 255, 0.9);
+        background: var(--brand-overlay-bg, rgba(255, 255, 255, 0.9));
         padding: 8px 16px;
-        border-radius: 4px;
+        border-radius: var(--brand-card-radius, 4px);
         text-decoration: none;
-        color: #333;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        color: var(--brand-text-dark, #333);
         font-size: 14px;
       }
       #about-link:hover {
-        background: white;
+        background: var(--brand-overlay-bg-hover, white);
+      }
+      #page-footer {
+        align-self: flex-end;
+        padding: 16px 20px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        font-weight: 300;
+      }
+      #page-footer a {
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+      }
+      #page-footer a:hover {
+        color: #ffffff;
       }
       /* Visually hidden but accessible to screen readers */
       .sr-only {
@@ -56,11 +109,19 @@
   </head>
 
   <body>
+    <div id="page-header">
+      <img class="brand-logo" alt="Logo" style="display:none">
+      <h1>Pose Match</h1>
+      <p>Strike a pose. Find your artwork.</p>
+    </div>
     <div id="canvas-container">
       <a href="about.html" id="about-link">About</a>
       <div id="qrcode"></div>
       <!-- Screen reader announcement for match changes -->
       <div id="match-announcement" aria-live="polite" class="sr-only"></div>
+    </div>
+    <div id="page-footer">
+      From your friends at the <a href="https://www.glamelab.org/" target="_blank">GLAM-E Lab</a> and the <a href="https://www.nyuengelberg.org/" target="_blank">Engelberg Center</a>
     </div>
     <script src="sketch.js"></script>
   </body>

@@ -158,11 +158,22 @@ while number_of_pictures_processed <= number_of_pictures_to_process:
         try:
             response = requests.get(met_api_url)
             response.raise_for_status()
-        #if there is an error in the url, this round of the while loop will end 
+        #if there is an error in the url, this round of the while loop will end
         except requests.exceptions.HTTPError as e:
             print(f'Skipping {this_object_ID}: {e}')
             used_random_numbers.append(this_object_ID)
             continue
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+            print(f'Connection error for {this_object_ID}: {e}')
+            print('Retrying in 10 seconds...')
+            time.sleep(10)
+            try:
+                response = requests.get(met_api_url)
+                response.raise_for_status()
+            except Exception as e2:
+                print(f'Retry failed, skipping {this_object_ID}: {e2}')
+                used_random_numbers.append(this_object_ID)
+                continue
         #convert into dict
         object_data = response.json()
 
@@ -193,6 +204,17 @@ while number_of_pictures_processed <= number_of_pictures_to_process:
                 print(f'Skipping {this_object_ID}: {e}')
                 used_random_numbers.append(this_object_ID)
                 continue
+            except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+                print(f'Connection error downloading {this_object_ID}: {e}')
+                print('Retrying in 10 seconds...')
+                time.sleep(10)
+                try:
+                    r = requests.get(object_image_url, timeout=15)
+                    r.raise_for_status()
+                except Exception as e2:
+                    print(f'Retry failed, skipping {this_object_ID}: {e2}')
+                    used_random_numbers.append(this_object_ID)
+                    continue
 
             #save it as temp_image.jpg (note, things will be bad if you use this somewhere else that does not use jpg...)
             with open("temp_image.jpg", "wb") as f:
@@ -265,6 +287,8 @@ end_time = time.time()
 elapsed_time = (end_time - start_time) / 60  
 
 print(f'Tested {len(used_random_numbers)} objects. Downloaded {images_downloaded} images, {number_of_pictures_processed} of which were people.')
+
+print(f'It took {elapsed_time} minutes to run')
         
 
 

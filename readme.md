@@ -12,6 +12,7 @@ https://docs.ml5js.org/#/reference/bodypose
 *info.html* is a template page for individual images. It expects to load with info.html?id=[object_id]
 *about.html* is an about page
 *analytics.js* allows you to add analytics. These are not required. 
+*branding.js* allows you to customize the branding for the site
 
 ## /utilities contains utilities to prep the dataset (images and metadata)
 
@@ -56,6 +57,16 @@ Outputs: processed_images/*.jpg and image_metadata.json
 * image_metadata.json → pose_match/input_images_metadata.json **(RENAME)**
 Open index.html and it should work
 
+### image_cleaner_to_main.py
+
+Script to move images processed by the image_cleaner utility to the main project folder.  You can do this manually by following the instructions in met_random_downloader, but using the script minimizes the chances of a rename error.  This script runs in two modes:
+
+* **replace mode** will replace the contents of the main project folder  (/input_images and input_image_metadata.json) with the contents of the image_cleaner utility
+* **append mode** will add the contents of the image_cleaner utility to the existing contents of the main project folder
+
+*Institution Codes*
+MM: Met Museum
+
 ## Development Plan
 
 ### Phase 4 (easy for others to add their own images and branding)
@@ -80,6 +91,7 @@ X - start here
 10. Create a new utility to download images from smithsonian
 11. Use 9b to integrate smithsonian images into dataset
 12. Add branding and styling to primary page in a way that can easily be restyled (maybe handed with a separate file, similarly to how analytics.js makes it easy to edit analytics)
+13. What happens if someone hits this on mobile?
 
 
 
