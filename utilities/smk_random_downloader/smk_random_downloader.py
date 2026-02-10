@@ -9,7 +9,7 @@ from PIL import Image
 import tensorflow as tf
 import tensorflow_hub as hub
 
-number_of_pictures_to_process = 500
+number_of_pictures_to_process = 300
 number_of_pictures_processed = 0
 
 #so you know how long it takes to run this thing
@@ -308,11 +308,12 @@ while number_of_pictures_processed < number_of_pictures_to_process:
             print('person!')
             print(f'{number_of_pictures_processed+1} of {number_of_pictures_to_process} saved.')
 
-            #move & rename the file
-            shutil.move("temp_image.jpg", "output_images/"+str(object_number)+".jpg")
+            #move & rename the file (sanitize slashes in object numbers like "KKS14612/16")
+            safe_filename = str(object_number).replace("/", "_")
+            shutil.move("temp_image.jpg", "output_images/"+safe_filename+".jpg")
 
             image_metadata = {
-                "Object_ID": object_number,
+                "Object_ID": safe_filename,
                 'object_image_url': object_image_url,
                 'Title': object_title,
                 'Artist_Display_Name': object_artist,

@@ -53,8 +53,14 @@ Outputs: processed_images/*.jpg and image_metadata.json
 
 *Move files to main project root (DON'T FORGET TO RENAME THE METADATA FILE):*
 
+**Manual method**
 * processed_images/*.jpg → pose_match/input_images/
 * image_metadata.json → pose_match/input_images_metadata.json **(RENAME)**
+
+**Automatic method**
+set mode for image_cleaner_to_main.py in code
+run image_cleaner_to_main.py from the utilities folder
+
 Open index.html and it should work
 
 ### image_cleaner_to_main.py
@@ -66,6 +72,7 @@ Script to move images processed by the image_cleaner utility to the main project
 
 *Institution Codes*
 MM: Met Museum
+SS: Smithsonian
 
 ## Development Plan
 
@@ -75,6 +82,8 @@ MM: Met Museum
 
 0. Add a glam-e lab/EC footer
 1. Host somewhere that makes the site available to others
+**start here**
+2. fix favicon
 
 ### Phase 2 (working at scale)
 

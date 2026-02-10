@@ -13,7 +13,7 @@ import glob
 
 # ============== CONFIGURATION ==============
 
-MODE = "replace"  # "replace" or "append"
+MODE = "append"  # "replace" or "append"
 
 # ============== PATHS ==============
 # All paths are relative to this script's location (utilities/)
