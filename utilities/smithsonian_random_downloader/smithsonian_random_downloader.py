@@ -8,7 +8,7 @@ from PIL import Image
 import tensorflow as tf
 import tensorflow_hub as hub
 
-number_of_pictures_to_process = 5
+number_of_pictures_to_process = 500
 number_of_pictures_processed = 0
 
 #so you know how long it takes to run this thing
