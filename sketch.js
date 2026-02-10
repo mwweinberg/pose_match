@@ -43,6 +43,10 @@ function preload() {
 }
 
 function setup() {
+  // Remove loading placeholder
+  let loadingMsg = document.getElementById('loading-message');
+  if (loadingMsg) loadingMsg.remove();
+
   // Double width: webcam on left, matching image on right
   let canvas = createCanvas(800, 593);
   canvas.parent('canvas-container');

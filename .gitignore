@@ -11,3 +11,5 @@ utilities/met_random_downloader/MetObjects.csv
 utilities/smithsonian_random_downloader/config.json
 utilities/smithsonian_random_downloader/output_images/
 utilities/smithsonian_random_downloader/temp_image.jpg
+utilities/smk_random_downloader/output_images/
+utilities/smk_random_downloader/temp_image.jpg
