@@ -30,12 +30,12 @@
         text-align: center;
         padding: 24px 20px 16px;
       }
-      #page-header .brand-logo {
-        display: none;
-        max-height: 40px;
-        margin-bottom: 12px;
-        padding: 6px 12px;
-        border-radius: var(--brand-card-radius, 4px);
+      #page-logo {
+        position: fixed;
+        top: 12px;
+        left: 16px;
+        max-height: 36px;
+        z-index: 10;
         background-color: transparent;
       }
       #page-header h1 {
@@ -66,15 +66,16 @@
         border-radius: 4px;
       }
       #about-link {
-        position: absolute;
-        top: 10px;
-        right: 10px;
+        position: fixed;
+        top: 16px;
+        right: 16px;
         background: var(--brand-overlay-bg, rgba(255, 255, 255, 0.9));
         padding: 8px 16px;
         border-radius: var(--brand-card-radius, 4px);
         text-decoration: none;
         color: var(--brand-text-dark, #333);
         font-size: 14px;
+        z-index: 10;
       }
       #about-link:hover {
         background: var(--brand-overlay-bg-hover, white);
@@ -109,13 +110,13 @@
   </head>
 
   <body>
+    <img id="page-logo" class="brand-logo" alt="Logo" style="display:none">
     <div id="page-header">
-      <img class="brand-logo" alt="Logo" style="display:none">
       <h1>Pose Match</h1>
       <p>Strike a pose. Find your artwork.</p>
     </div>
+    <a href="about.html" id="about-link">About</a>
     <div id="canvas-container">
-      <a href="about.html" id="about-link">About</a>
       <div id="qrcode"></div>
       <!-- Screen reader announcement for match changes -->
       <div id="match-announcement" aria-live="polite" class="sr-only"></div>

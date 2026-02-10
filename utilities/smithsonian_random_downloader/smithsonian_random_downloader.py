@@ -4,10 +4,11 @@ import shutil
 import os
 import json
 
+from PIL import Image
 import tensorflow as tf
 import tensorflow_hub as hub
 
-number_of_pictures_to_process = 500
+number_of_pictures_to_process = 5
 number_of_pictures_processed = 0
 
 #so you know how long it takes to run this thing
@@ -172,7 +173,7 @@ def get_image_url(row):
                 # Prefer high-res JPEG from resources
                 resources = item.get('resources', [])
                 for resource in resources:
-                    if 'High-resolution' in resource.get('label', ''):
+                    if 'Screen' in resource.get('label', ''):
                         return resource['url']
                 # Fall back to content URL
                 return item.get('content', '')
@@ -305,6 +306,15 @@ while number_of_pictures_processed < number_of_pictures_to_process:
         #save it as temp_image.jpg
         with open("temp_image.jpg", "wb") as f:
             f.write(r.content)
+
+        # Convert to JPEG (handles TIFF, PNG, WebP, etc.)
+        try:
+            img = Image.open("temp_image.jpg")
+            img = img.convert("RGB")
+            img.save("temp_image.jpg", "JPEG")
+        except Exception as e:
+            print(f'  Could not convert image for {record_id}: {e}')
+            continue
 
         #process the image with tensorflow
         keypoints = detect_pose(movenet, "temp_image.jpg")

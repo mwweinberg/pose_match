@@ -140,9 +140,29 @@ function draw() {
     }
   }
 
-  // Draw the best matching image on the right side
+  // Draw the best matching image on the right side (preserve aspect ratio)
   if (bestMatchImg) {
-    image(bestMatchImg, 400, 0, 400, 593);
+    let areaW = 400;
+    let areaH = 593;
+    let imgRatio = bestMatchImg.width / bestMatchImg.height;
+    let areaRatio = areaW / areaH;
+    let drawW, drawH;
+    if (imgRatio > areaRatio) {
+      // Image is wider than area — fit to width
+      drawW = areaW;
+      drawH = areaW / imgRatio;
+    } else {
+      // Image is taller than area — fit to height
+      drawH = areaH;
+      drawW = areaH * imgRatio;
+    }
+    let drawX = 400 + (areaW - drawW) / 2;
+    let drawY = (areaH - drawH) / 2;
+    // Black background behind image to fill letterbox area
+    fill(0);
+    noStroke();
+    rect(400, 0, areaW, areaH);
+    image(bestMatchImg, drawX, drawY, drawW, drawH);
   }
 
   // Draw label for the matching image (show title and artist from metadata)
@@ -373,11 +393,8 @@ function mousePressed() {
     return;
   }
 
-  // Exclude the About button area (top-right corner)
-  let inAboutButton = (mouseX > 700 && mouseY < 50);
-
-  // Only respond to clicks on the right side (matched image area), excluding About button
-  if (mouseX > 400 && mouseX < 800 && mouseY > 0 && mouseY < 593 && !inAboutButton) {
+  // Only respond to clicks on the right side (matched image area)
+  if (mouseX > 400 && mouseX < 800 && mouseY > 0 && mouseY < 593) {
     if (bestMatchData) {
       let infoUrl = window.location.href.replace(/[^/]*$/, '') + 'info.html?id=' + bestMatchData.object_id;
       window.open(infoUrl, '_blank');

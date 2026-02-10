@@ -92,6 +92,7 @@ X - start here
 11. Use 9b to integrate smithsonian images into dataset
 12. Add branding and styling to primary page in a way that can easily be restyled (maybe handed with a separate file, similarly to how analytics.js makes it easy to edit analytics)
 13. What happens if someone hits this on mobile?
+14. Images are distorted 
 
 
 

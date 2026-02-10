@@ -47,6 +47,7 @@
       backgroundRepeat: "no-repeat",
       backgroundSize: "cover",
       backgroundPosition: "center",
+      logoLink: "https://www.glamelab.org/",
     };
 
     // ============== DO NOT EDIT BELOW ==============
@@ -124,6 +125,13 @@
         for (var i = 0; i < logos.length; i++) {
           logos[i].src = brand.logo;
           logos[i].style.display = "";
+          if (brand.logoLink) {
+            var a = document.createElement("a");
+            a.href = brand.logoLink;
+            a.target = "_blank";
+            logos[i].parentNode.insertBefore(a, logos[i]);
+            a.appendChild(logos[i]);
+          }
         }
       });
     }
