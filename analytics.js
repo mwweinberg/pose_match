@@ -7,14 +7,16 @@
 
 (function() {
   try {
-    // ===== OPTION 1: Plausible Analytics =====
-    // Uncomment and set your domain:
-    //
-    // var script = document.createElement('script');
-    // script.defer = true;
-    // script.dataset.domain = 'yourdomain.com';
-    // script.src = 'https://plausible.io/js/script.js';
-    // document.head.appendChild(script);
+    // ===== Plausible Analytics =====
+    var script = document.createElement('script');
+    script.async = true;
+    script.src = 'https://plausible.io/js/pa-1E23ur5gghzXU6vzBVaTA.js';
+    document.head.appendChild(script);
+    window.plausible = window.plausible || function() {
+      (plausible.q = plausible.q || []).push(arguments);
+    };
+    plausible.init = plausible.init || function(i) { plausible.o = i || {}; };
+    plausible.init();
 
     // ===== OPTION 2: Google Analytics (GA4) =====
     // Uncomment and set your Measurement ID (G-XXXXXXXXXX):
