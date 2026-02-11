@@ -35,8 +35,8 @@ It outputs:
 * Images that probably have people in `/person_images`
 * metadata for those images into `person_images_metadata.json`
 
-### met_random_downloader 
-downloads a random collection of images of people from the met and bundles them with the relevant metadata. This is just a script to build the original testing dataset.  Run it with `caffeinate -i python met_random_downloader.py` to avoid crashes because the compute goes to sleep in the middle
+### n_random_downloader 
+downloads a random collection of images of people from the identified collection and bundles them with the relevant metadata. This is just a script to build the original testing dataset.  Run it with `caffeinate -i python met_random_downloader.py` to avoid crashes because the compute goes to sleep in the middle
 
 *Run met_random_downloader.py* (from the met_random_downloader/ folder)
 
@@ -46,6 +46,7 @@ Outputs: output_images/*.jpg and cleaned_met_data.json
 
 * output_images/*.jpg → image_cleaner/input_images/
 * cleaned_met_data.json → image_cleaner/input_metadata.json **(RENAME)**
+* delete anything that is already in the /processed_images folder
 
 Run person_or_not.py (from the image_cleaner/ folder)
 
@@ -73,6 +74,7 @@ Script to move images processed by the image_cleaner utility to the main project
 *Institution Codes*
 MM: Met Museum
 SS: Smithsonian
+SK: SMK
 
 ## Development Plan
 
