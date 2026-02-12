@@ -18,6 +18,7 @@ https://docs.ml5js.org/#/reference/bodypose
 
 Deploying a customized version of this project should be fairly easy. Some things you will need to do include:
 
+* Update the text in the `about.html` and headers in the `index.html` page to describe what you are doing.
 * Update `branding.js` and `analytics.js` to match your branding and analytics needs
 * Add your own images and metadata.  The best way to do that is probably to create an input dataset that matches the requirements for the utility `image_cleaner.py` (see instructions below).  You can then run `image_cleaner.py` followed by `image_cleaner_to_main.py` in replace mode.  
 * You can deploy your own version for free using a static site host like cloudflare pages.  The easiest way to do that is to create a github repo with your version and then connect it to a new cloudflare page project.  That way you can update the repo and it will automatically update the live site. You are also one step away from either adding a custom domain or subdomaining it with an existing site.
