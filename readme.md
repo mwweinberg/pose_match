@@ -8,11 +8,19 @@ https://docs.ml5js.org/#/reference/bodypose
 
 ## Pages and Scripts
 
-*index.html and sketch.js* are the main parts of the page
-*info.html* is a template page for individual images. It expects to load with info.html?id=[object_id]
-*about.html* is an about page
-*analytics.js* allows you to add analytics. These are not required. 
-*branding.js* allows you to customize the branding for the site
+* *index.html and sketch.js* are the main parts of the page
+* *info.html* is a template page for individual images. It expects to load with info.html?id=[object_id]
+* *about.html* is an about page
+* *analytics.js* allows you to add analytics. These are not required. 
+* *branding.js* allows you to customize the branding for the site
+
+## Customization
+
+Deploying a customized version of this project should be fairly easy. Some things you will need to do include:
+
+* Update `branding.js` and `analytics.js` to match your branding and analytics needs
+* Add your own images and metadata.  The best way to do that is probably to create an input dataset that matches the requirements for the utility `image_cleaner.py` (see instructions below).  You can then run `image_cleaner.py` followed by `image_cleaner_to_main.py` in replace mode.  
+* You can deploy your own version for free using a static site host like cloudflare pages.  The easiest way to do that is to create a github repo with your version and then connect it to a new cloudflare page project.  That way you can update the repo and it will automatically update the live site. You are also one step away from either adding a custom domain or subdomaining it with an existing site.
 
 ## /utilities contains utilities to prep the dataset (images and metadata)
 
@@ -35,6 +43,8 @@ It outputs:
 * Images that probably have people in `/person_images`
 * metadata for those images into `person_images_metadata.json`
 
+You can then use the `image_cleaner_to_main.py` script to copy the files and metadata over to the main project. Note that the script has two modes: replace and append.
+
 ### n_random_downloader 
 downloads a random collection of images of people from the identified collection and bundles them with the relevant metadata. This is just a script to build the original testing dataset.  Run it with `caffeinate -i python met_random_downloader.py` to avoid crashes because the compute goes to sleep in the middle
 
@@ -56,7 +66,7 @@ Outputs: processed_images/*.jpg and image_metadata.json
 
 **Manual method**
 * processed_images/*.jpg → pose_match/input_images/
-* image_metadata.json → pose_match/input_images_metadata.json **(RENAME)**
+* image_metadata.json → pose_match/input_images_metadata.json **(NOT THE FILE NAME CHANGE)**
 
 **Automatic method**
 set mode for image_cleaner_to_main.py in code
@@ -72,11 +82,13 @@ Script to move images processed by the image_cleaner utility to the main project
 * **append mode** will add the contents of the image_cleaner utility to the existing contents of the main project folder
 
 *Institution Codes*
-MM: Met Museum
-SS: Smithsonian
-SK: SMK
+* MM: Met Museum
+* SS: Smithsonian
+* SK: SMK
 
 ## Development Plan
+
+Phases 1-3 are complete as of 2/12/26
 
 ### Phase 4 (easy for others to add their own images and branding)
 
@@ -84,7 +96,6 @@ SK: SMK
 
 0. Add a glam-e lab/EC footer
 1. Host somewhere that makes the site available to others
-**start here**
 2. fix favicon
 
 ### Phase 2 (working at scale)
