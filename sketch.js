@@ -34,6 +34,20 @@ const ANNOUNCE_DELAY_MS = 1500;  // Wait 1.5 seconds of stable match before anno
 let cameraReady = false;
 let cameraError = false;
 
+// Explore mode: penalize recently shown images to encourage variety
+// Without this, the same ~15 images dominate because ~71% of the dataset
+// shares a nearly identical standing pose (cosine similarity > 0.95)
+let exploreMode = true;
+let recentMatches = [];
+// How many recently shown images to remember and penalize.
+// Once an image falls off this list, it can win again.
+const EXPLORE_HISTORY_SIZE = 20;
+// How much to subtract from a recent image's similarity score.
+// Most images in the dominant cluster score within ~0.02-0.05 of each other,
+// so 0.08 is enough to let other cluster members win without suppressing
+// a genuinely better match from a different pose.
+const EXPLORE_PENALTY = 0.08;
+
 function preload() {
   // Load the bodyPose model
   bodyPose = ml5.bodyPose();
@@ -223,6 +237,11 @@ function findBestMatch() {
 
     let similarity = cosineSimilarity(webcamProcessed.l2Vector, reference.l2_vector);
 
+    // In explore mode, penalize recently shown images so other similar images get a turn
+    if (exploreMode && recentMatches.indexOf(reference.filename) !== -1) {
+      similarity -= EXPLORE_PENALTY;
+    }
+
     if (similarity > bestSimilarity) {
       bestSimilarity = similarity;
       bestData = reference;
@@ -231,6 +250,14 @@ function findBestMatch() {
 
   // If we found a match, update the display
   if (bestData !== null) {
+    // Track recent matches for explore mode
+    if (bestData.filename !== (bestMatchData && bestMatchData.filename)) {
+      recentMatches.push(bestData.filename);
+      if (recentMatches.length > EXPLORE_HISTORY_SIZE) {
+        recentMatches.shift();
+      }
+    }
+
     bestMatchData = bestData;
 
     // Update QR code if match changed
