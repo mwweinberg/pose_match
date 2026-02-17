@@ -34,6 +34,10 @@ const ANNOUNCE_DELAY_MS = 1500;  // Wait 1.5 seconds of stable match before anno
 let cameraReady = false;
 let cameraError = false;
 
+// Webcam crop parameters (set during draw, used to map skeleton keypoints)
+let cropSx = 0, cropSy = 0, cropSw = 640, cropSh = 480;
+let cropAreaW = 400, cropAreaH = 593;
+
 // Explore mode: penalize recently shown images to encourage variety
 // Without this, the same ~15 images dominate because ~71% of the dataset
 // shares a nearly identical standing pose (cosine similarity > 0.95)
@@ -78,7 +82,7 @@ function setup() {
     // Start continuous pose detection on webcam
     bodyPose.detectStart(video, gotWebcamPoses);
   });
-  video.size(400, 593);
+  video.size(640, 480);
   video.hide();
 
   // Handle camera permission denied
@@ -125,7 +129,29 @@ function draw() {
     fill(180);
     text("Please allow camera access\nto use Pose Match", 200, 320);
   } else if (video) {
-    image(video, 0, 0, 400, 593);
+    // Crop-to-fit: scale webcam to fill area, clipping overflow (like object-fit: cover)
+    let vidRatio = video.width / video.height;
+    let areaW = 400;
+    let areaH = 593;
+    let areaRatio = areaW / areaH;
+    let sx, sy, sw, sh;
+    if (vidRatio > areaRatio) {
+      // Webcam is wider than area — crop sides
+      sh = video.height;
+      sw = video.height * areaRatio;
+      sx = (video.width - sw) / 2;
+      sy = 0;
+    } else {
+      // Webcam is taller than area — crop top/bottom
+      sw = video.width;
+      sh = video.width / areaRatio;
+      sx = 0;
+      sy = (video.height - sh) / 2;
+    }
+    image(video, 0, 0, areaW, areaH, sx, sy, sw, sh);
+    // Store crop params for skeleton mapping
+    cropSx = sx; cropSy = sy; cropSw = sw; cropSh = sh;
+    cropAreaW = areaW; cropAreaH = areaH;
   }
 
   // Draw skeleton on webcam feed if poses detected
@@ -142,7 +168,12 @@ function draw() {
       if (pointA.confidence > 0.1 && pointB.confidence > 0.1) {
         stroke(255, 0, 0);
         strokeWeight(2);
-        line(pointA.x, pointA.y, pointB.x, pointB.y);
+        line(
+          (pointA.x - cropSx) * (cropAreaW / cropSw),
+          (pointA.y - cropSy) * (cropAreaH / cropSh),
+          (pointB.x - cropSx) * (cropAreaW / cropSw),
+          (pointB.y - cropSy) * (cropAreaH / cropSh)
+        );
       }
     }
 
@@ -153,7 +184,11 @@ function draw() {
       if (keypoint.confidence > 0.1) {
         fill(0, 255, 0);
         noStroke();
-        circle(keypoint.x, keypoint.y, 10);
+        circle(
+          (keypoint.x - cropSx) * (cropAreaW / cropSw),
+          (keypoint.y - cropSy) * (cropAreaH / cropSh),
+          10
+        );
       }
     }
   }
