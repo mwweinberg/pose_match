@@ -45,12 +45,25 @@ let exploreMode = true;
 let recentMatches = [];
 // How many recently shown images to remember and penalize.
 // Once an image falls off this list, it can win again.
-const EXPLORE_HISTORY_SIZE = 20;
+const EXPLORE_HISTORY_SIZE = 50;
 // How much to subtract from a recent image's similarity score.
 // Most images in the dominant cluster score within ~0.02-0.05 of each other,
 // so 0.08 is enough to let other cluster members win without suppressing
 // a genuinely better match from a different pose.
 const EXPLORE_PENALTY = 0.08;
+
+// Movement-aware timing for explore mode:
+// Instead of penalizing images immediately, wait a minimum display time
+// so the user can see each match before it rotates away.
+let matchStartTime = 0;        // When the current match first appeared
+let previousPoseVector = null;  // Previous frame's pose vector for movement detection
+// Minimum time (ms) to show each image before it can be penalized away.
+// When standing still, images stay longer; when moving, they rotate faster.
+const EXPLORE_MIN_DISPLAY_STILL_MS = 5000;   // 5 seconds when not moving
+const EXPLORE_MIN_DISPLAY_MOVING_MS = 1000;  // 1 second when actively moving
+// Cosine similarity between consecutive pose vectors above this threshold
+// means the person is standing still (vectors are nearly identical).
+const MOVEMENT_THRESHOLD = 0.98;
 
 function preload() {
   // Load the bodyPose model
@@ -285,13 +298,27 @@ function findBestMatch() {
 
   // If we found a match, update the display
   if (bestData !== null) {
-    // Track recent matches for explore mode
-    if (bestData.filename !== (bestMatchData && bestMatchData.filename)) {
-      recentMatches.push(bestData.filename);
-      if (recentMatches.length > EXPLORE_HISTORY_SIZE) {
-        recentMatches.shift();
+    // Track recent matches for explore mode (time-gated)
+    let matchChanged = bestData.filename !== (bestMatchData && bestMatchData.filename);
+    if (matchChanged) {
+      // New match appeared — start its display timer
+      matchStartTime = millis();
+    } else if (exploreMode && bestMatchData) {
+      // Same match is still winning — check if it's been shown long enough to penalize
+      let isMoving = previousPoseVector !== null &&
+        cosineSimilarity(webcamProcessed.l2Vector, previousPoseVector) < MOVEMENT_THRESHOLD;
+      let minDisplay = isMoving ? EXPLORE_MIN_DISPLAY_MOVING_MS : EXPLORE_MIN_DISPLAY_STILL_MS;
+      if (millis() - matchStartTime > minDisplay &&
+          recentMatches.indexOf(bestData.filename) === -1) {
+        recentMatches.push(bestData.filename);
+        if (recentMatches.length > EXPLORE_HISTORY_SIZE) {
+          recentMatches.shift();
+        }
       }
     }
+
+    // Store current pose vector for next frame's movement detection
+    previousPoseVector = webcamProcessed.l2Vector;
 
     bestMatchData = bestData;
 

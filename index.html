@@ -128,7 +128,6 @@
         top: 0; left: 0; right: 0; bottom: 0;
         background-color: rgba(255, 255, 255, 0.2);
         border-radius: 22px;
-        transition: background-color 0.3s;
       }
       .toggle-slider:before {
         content: "";
@@ -140,9 +139,6 @@
         background-color: white;
         border-radius: 50%;
         transition: transform 0.3s;
-      }
-      .toggle-switch input:checked + .toggle-slider {
-        background-color: var(--brand-accent, #00f47b);
       }
       .toggle-switch input:checked + .toggle-slider:before {
         transform: translateX(18px);
@@ -176,17 +172,19 @@
       <div id="match-announcement" aria-live="polite" class="sr-only"></div>
     </div>
     <div id="mode-toggle">
-      <span class="mode-label">Best Match</span>
+      <span class="mode-label">Explore</span>
       <label class="toggle-switch">
-        <input type="checkbox" id="explore-toggle" checked>
+        <input type="checkbox" id="explore-toggle">
         <span class="toggle-slider"></span>
       </label>
-      <span class="mode-label">Explore</span>
+      <span class="mode-label">Best Match</span>
     </div>
     <script>
       document.getElementById('explore-toggle').addEventListener('change', function() {
-        window.exploreMode = this.checked;
+        window.exploreMode = !this.checked;
         window.recentMatches = [];
+        window.matchStartTime = 0;
+        window.previousPoseVector = null;
       });
     </script>
     <div id="page-footer">
