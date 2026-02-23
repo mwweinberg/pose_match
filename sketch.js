@@ -298,35 +298,39 @@ function findBestMatch() {
 
   // If we found a match, update the display
   if (bestData !== null) {
-    // Track recent matches for explore mode (time-gated)
     let matchChanged = bestData.filename !== (bestMatchData && bestMatchData.filename);
+
     if (matchChanged) {
-      // New match appeared — start its display timer
-      matchStartTime = millis();
-    } else if (exploreMode && bestMatchData) {
-      // Same match is still winning — check if it's been shown long enough to penalize
+      // A different image wants to win — only allow the switch if the current image
+      // has been shown for the minimum display time. This prevents rapid cycling when
+      // the pose naturally fluctuates between a few similar images.
       let isMoving = previousPoseVector !== null &&
         cosineSimilarity(webcamProcessed.l2Vector, previousPoseVector) < MOVEMENT_THRESHOLD;
       let minDisplay = isMoving ? EXPLORE_MIN_DISPLAY_MOVING_MS : EXPLORE_MIN_DISPLAY_STILL_MS;
-      if (millis() - matchStartTime > minDisplay &&
-          recentMatches.indexOf(bestData.filename) === -1) {
-        recentMatches.push(bestData.filename);
-        if (recentMatches.length > EXPLORE_HISTORY_SIZE) {
-          recentMatches.shift();
+
+      if (bestMatchData === null || millis() - matchStartTime >= minDisplay) {
+        // Allowed to switch — penalize the outgoing image now that we're done with it
+        if (exploreMode && bestMatchData &&
+            recentMatches.indexOf(bestMatchData.filename) === -1) {
+          recentMatches.push(bestMatchData.filename);
+          if (recentMatches.length > EXPLORE_HISTORY_SIZE) {
+            recentMatches.shift();
+          }
         }
+        matchStartTime = millis();
+        bestMatchData = bestData;
       }
+      // else: minimum display time not yet elapsed — keep showing the current match
     }
 
     // Store current pose vector for next frame's movement detection
     previousPoseVector = webcamProcessed.l2Vector;
 
-    bestMatchData = bestData;
-
-    // Update QR code if match changed
-    updateQRCode(bestData.object_id);
+    // Update QR code and image using bestMatchData (which may not have changed above)
+    updateQRCode(bestMatchData.object_id);
 
     // Check if image is already cached
-    let filename = bestData.filename;
+    let filename = bestMatchData.filename;
     if (imageCache[filename]) {
       // Use cached image
       bestMatchImg = imageCache[filename];
