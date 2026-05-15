@@ -1,4 +1,4 @@
-Inspired? by https://medium.com/tensorflow/move-mirror-an-ai-experiment-with-pose-estimation-in-the-browser-using-tensorflow-js-2f7b769f9b23
+Inspired? by https://medium.com/tensorflow/move-mirror-an-ai-experiment-with-pose-estimation-in-the-browser-using-tensorflow-js-2f7b769f9b23 and https://www.clevelandart.org/artlens-exhibition
 
 
 https://docs.ml5js.org/#/reference/bodypose
