@@ -201,3 +201,7 @@ The Google Creative Lab documented [their own version of this project in 2018](h
 
 Finally, as we started developing this project, many (many, many) people responded with a variation of "oh like [Strike a Pose at the Cleveland Museum of Art](https://www.clevelandart.org/artlens-gallery/artlens-gallery-first-iteration-gallery-one)?".  The only answer to that is "yes, a lot like that!".  
 
+# Licensing
+
+Add code and instructions are released under an MIT License. Images are in the public domain. The GLAM-E Lab logo and branding is not openly licensed.  
+
