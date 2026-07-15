@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -146,40 +146,62 @@
               return;
             }
 
-            // Build the display HTML
+            // Build the display with DOM APIs (not innerHTML) — museum
+            // metadata is third-party data and routinely contains quotes
+            // and angle brackets, which would otherwise break the markup
+            // or inject scripts
             const meta = artwork.metadata;
             const title = meta.title || 'Untitled';
             const artist = meta.artist || 'Unknown artist';
 
-            let html = `
-              <img src="input_images/${artwork.filename}" alt="${title}" class="artwork-image">
-              <div class="artwork-title">${title}</div>
-              <div class="artwork-artist">${artist}</div>
-              <table class="metadata-table">
-            `;
+            contentDiv.textContent = '';
 
-            // Add metadata rows (only if they have values)
-            if (meta.date) {
-              html += `<tr><td class="metadata-label">Date</td><td class="metadata-value">${meta.date}</td></tr>`;
-            }
-            if (meta.medium) {
-              html += `<tr><td class="metadata-label">Medium</td><td class="metadata-value">${meta.medium}</td></tr>`;
-            }
-            if (meta.department) {
-              html += `<tr><td class="metadata-label">Department</td><td class="metadata-value">${meta.department}</td></tr>`;
-            }
-            if (meta.repository) {
-              html += `<tr><td class="metadata-label">Repository</td><td class="metadata-value">${meta.repository}</td></tr>`;
-            }
+            const img = document.createElement('img');
+            img.src = 'input_images/' + artwork.filename;
+            img.alt = title;
+            img.className = 'artwork-image';
+            contentDiv.appendChild(img);
 
-            html += '</table>';
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'artwork-title';
+            titleDiv.textContent = title;
+            contentDiv.appendChild(titleDiv);
 
-            // Add link to Met website if available
-            if (meta.link) {
-              html += `<a href="${meta.link}" target="_blank" class="met-link">Learn More</a>`;
+            const artistDiv = document.createElement('div');
+            artistDiv.className = 'artwork-artist';
+            artistDiv.textContent = artist;
+            contentDiv.appendChild(artistDiv);
+
+            const table = document.createElement('table');
+            table.className = 'metadata-table';
+            const rows = [
+              ['Date', meta.date],
+              ['Medium', meta.medium],
+              ['Department', meta.department],
+              ['Repository', meta.repository]
+            ];
+            for (const [label, value] of rows) {
+              if (!value) continue;
+              const tr = table.insertRow();
+              const labelTd = tr.insertCell();
+              labelTd.className = 'metadata-label';
+              labelTd.textContent = label;
+              const valueTd = tr.insertCell();
+              valueTd.className = 'metadata-value';
+              valueTd.textContent = value;
             }
+            contentDiv.appendChild(table);
 
-            contentDiv.innerHTML = html;
+            // Add link to the source collection if available (https only)
+            if (meta.link && /^https:\/\//i.test(meta.link)) {
+              const link = document.createElement('a');
+              link.href = meta.link;
+              link.target = '_blank';
+              link.rel = 'noopener noreferrer';
+              link.className = 'met-link';
+              link.textContent = 'Learn More';
+              contentDiv.appendChild(link);
+            }
 
             // Update page title
             document.title = title + ' | Pose Match';

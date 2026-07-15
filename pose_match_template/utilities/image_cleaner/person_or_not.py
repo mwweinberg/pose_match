@@ -9,7 +9,6 @@ Outputs:
 
 import os
 import json
-import shutil
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
@@ -22,6 +21,13 @@ INPUT_IMAGES_FOLDER = "input_images"
 OUTPUT_IMAGES_FOLDER = "processed_images"
 INPUT_METADATA_FILE = "input_metadata.json"
 OUTPUT_METADATA_FILE = "image_metadata.json"
+
+# Output image sizing: downscale to this max dimension (long edge) and
+# recompress. The display canvas is 400x593 and the info page shows up to
+# 800px wide, so 1200px covers retina displays while keeping files ~100-200KB
+# instead of multi-MB museum masters.
+MAX_OUTPUT_DIMENSION = 1200
+OUTPUT_JPEG_QUALITY = 82
 
 # Pose detection thresholds
 # Minimum average confidence across all keypoints to consider a pose "detected"
@@ -185,6 +191,19 @@ def detect_pose(movenet, image_path):
         return None
 
 
+def save_resized_image(source_path, output_path):
+    """Save a web-sized copy of the image: downscale to MAX_OUTPUT_DIMENSION
+    on the long edge and recompress as progressive JPEG."""
+    from PIL import ImageOps
+    with Image.open(source_path) as im:
+        im = ImageOps.exif_transpose(im)
+        im.thumbnail((MAX_OUTPUT_DIMENSION, MAX_OUTPUT_DIMENSION), Image.LANCZOS)
+        if im.mode not in ("RGB", "L"):
+            im = im.convert("RGB")
+        im.save(output_path, "JPEG", quality=OUTPUT_JPEG_QUALITY,
+                optimize=True, progressive=True)
+
+
 def is_valid_pose(keypoints):
     """Check if the detected pose meets our quality thresholds."""
     if keypoints is None:
@@ -273,9 +292,9 @@ def process_all_images():
             # Process pose to get L2 vector
             pose_data = process_pose(keypoints)
 
-            # Copy image to output folder
+            # Save a web-sized copy to the output folder
             output_path = os.path.join(OUTPUT_IMAGES_FOLDER, filename)
-            shutil.copy2(image_path, output_path)
+            save_resized_image(image_path, output_path)
 
             # Get metadata for this image
             image_metadata = metadata_dict.get(object_id, {})
@@ -285,6 +304,10 @@ def process_all_images():
                 'object_id': object_id,
                 'filename': filename,
                 'l2_vector': pose_data['l2_vector'],
+                # Per-keypoint confidences (same order as KEYPOINT_NAMES) so
+                # the matcher can ignore vector dimensions where the artwork's
+                # own keypoints were uncertain
+                'keypoint_confidences': [round(kp['confidence'], 4) for kp in keypoints],
                 'metadata': {
                     'title': image_metadata.get('Title', ''),
                     'artist': image_metadata.get('Artist_Display_Name', ''),

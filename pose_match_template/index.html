@@ -1,23 +1,24 @@
+<!DOCTYPE html>
 <!--
-  👋 Hello! This is an ml5.js example made and shared with ❤️.
+  Pose Match — originally based on an ml5.js MoveNet example.
   Learn more about the ml5.js project: https://ml5js.org/
   ml5.js license and Code of Conduct: https://github.com/ml5js/ml5-next-gen/blob/main/LICENSE.md
-
-  This example demonstrates drawing skeletons on poses for the MoveNet model.
 -->
 
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pose Match</title>
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-    <link rel="preconnect" href="https://unpkg.com">
-    <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <script src="branding.js"></script>
     <script src="analytics.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.2/p5.min.js" defer></script>
-    <script src="https://unpkg.com/ml5@1/dist/ml5.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" defer></script>
+    <!-- Libraries are vendored locally (pinned: p5 1.9.2, ml5 1.3.1, qrcodejs 1.0.0)
+         so a CDN outage or silent upstream release can't break a running exhibit.
+         Note: ml5 still downloads MoveNet model weights from Google's servers
+         on page load, so first load needs network access. -->
+    <script src="libs/p5.min.js" defer></script>
+    <script src="libs/ml5.min.js" defer></script>
+    <script src="libs/qrcode.min.js" defer></script>
     <script src="sketch.js" defer></script>
     <style>
       body {
@@ -172,12 +173,13 @@
       <div id="match-announcement" aria-live="polite" class="sr-only"></div>
     </div>
     <div id="mode-toggle">
-      <span class="mode-label">Explore</span>
+      <span class="mode-label" aria-hidden="true">Explore</span>
       <label class="toggle-switch">
-        <input type="checkbox" id="explore-toggle">
+        <input type="checkbox" id="explore-toggle"
+               aria-label="Best Match mode (off: Explore mode, which rotates through more of the collection)">
         <span class="toggle-slider"></span>
       </label>
-      <span class="mode-label">Best Match</span>
+      <span class="mode-label" aria-hidden="true">Best Match</span>
     </div>
     <script>
       document.getElementById('explore-toggle').addEventListener('change', function() {
