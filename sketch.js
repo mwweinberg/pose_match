@@ -43,14 +43,23 @@ let cropAreaW = 400, cropAreaH = 593;
 // shares a nearly identical standing pose (cosine similarity > 0.95)
 let exploreMode = true;
 let recentMatches = [];
-// How many recently shown images to remember and penalize.
-// Once an image falls off this list, it can win again.
-const EXPLORE_HISTORY_SIZE = 50;
-// How much to subtract from a recent image's similarity score.
-// Most images in the dominant cluster score within ~0.02-0.05 of each other,
-// so 0.08 is enough to let other cluster members win without suppressing
-// a genuinely better match from a different pose.
-const EXPLORE_PENALTY = 0.08;
+// How many recently shown images to remember and exclude from matching.
+// Once an image falls off this list, it can be shown again.
+// Sized close to the dataset (~1300 images) so a long session cycles
+// through most of the collection before repeating.
+// Recent images are excluded outright rather than score-penalized: for
+// distinctive poses the dataset has only a few close matches and similarity
+// falls off a cliff (0.1-0.45) right after them, so no fixed penalty can
+// stop those few from winning over and over.
+const EXPLORE_HISTORY_SIZE = 400;
+
+// In explore mode, instead of always showing the single highest-scoring image,
+// pick randomly among all near-tie candidates. For common poses, hundreds of
+// images score within 0.02 of the top match — a difference no user can
+// perceive — so sampling from that band spreads matches across the whole
+// collection instead of the same few argmax winners.
+const MATCH_SAMPLE_EPSILON = 0.015;  // candidates within this of the best score
+const MATCH_SAMPLE_TOP_K = 40;       // cap on the candidate pool per pick
 
 // Movement-aware timing for explore mode:
 // Instead of penalizing images immediately, wait a minimum display time
@@ -270,6 +279,8 @@ function findBestMatch() {
 
   let bestSimilarity = -Infinity;
   let bestData = null;
+  let bestEligibleSimilarity = -Infinity;
+  let eligible = [];  // explore mode: candidates not shown recently
 
   // Convert to array if needed (p5.js loadJSON returns object with numeric keys for arrays)
   let poseArray = Array.isArray(referencePoseData) ? referencePoseData : Object.values(referencePoseData);
@@ -285,15 +296,39 @@ function findBestMatch() {
 
     let similarity = cosineSimilarity(webcamProcessed.l2Vector, reference.l2_vector);
 
-    // In explore mode, penalize recently shown images so other similar images get a turn
-    if (exploreMode && recentMatches.indexOf(reference.filename) !== -1) {
-      similarity -= EXPLORE_PENALTY;
-    }
-
     if (similarity > bestSimilarity) {
       bestSimilarity = similarity;
       bestData = reference;
     }
+
+    // In explore mode, recently shown images are ineligible — only fresh
+    // images compete. This is what guarantees variety: for distinctive poses
+    // the few close matches would otherwise win every rotation.
+    if (exploreMode && recentMatches.indexOf(reference.filename) === -1) {
+      eligible.push({ similarity: similarity, reference: reference });
+      if (similarity > bestEligibleSimilarity) {
+        bestEligibleSimilarity = similarity;
+      }
+    }
+  }
+
+  // In explore mode, pick randomly among the near-tie eligible candidates
+  // rather than always taking the single best. The min-display gate below
+  // still controls when the displayed image is actually allowed to rotate.
+  if (exploreMode && eligible.length > 0) {
+    let band = eligible.filter(c => c.similarity >= bestEligibleSimilarity - MATCH_SAMPLE_EPSILON);
+    // Don't re-pick the image already on screen if there's any alternative
+    if (band.length > 1 && bestMatchData) {
+      let withoutCurrent = band.filter(c => c.reference.filename !== bestMatchData.filename);
+      if (withoutCurrent.length > 0) {
+        band = withoutCurrent;
+      }
+    }
+    band.sort((a, b) => b.similarity - a.similarity);
+    if (band.length > MATCH_SAMPLE_TOP_K) {
+      band.length = MATCH_SAMPLE_TOP_K;
+    }
+    bestData = band[Math.floor(Math.random() * band.length)].reference;
   }
 
   // If we found a match, update the display

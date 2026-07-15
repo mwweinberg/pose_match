@@ -6,6 +6,8 @@ https://docs.ml5js.org/#/reference/bodypose
 
 ## /archive are old versions that might be helpful for troubleshooting/figuring out how you got here
 
+`pose_match_template` is the folder that you will move to a stand-alone repo and use as the project template.  Files do not automatically sync between the main repo and the `_template` repo, so make sure to copy any changes from main into the `_template` repo (and then copy that entire folder over to the real `_template` repo). 
+
 ## Pages and Scripts
 
 * *index.html and sketch.js* are the main parts of the page
